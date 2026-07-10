@@ -49,7 +49,6 @@ const CONFIG = {
     // Usa <em> per evidenziare una parola in oro corsivo
     headline:    "Scopri il gusto<br><em>della tradizione</em>",
     sottotitolo: "Cucina italiana di qualità nel cuore della città — prenota il tuo tavolo e vivi un'esperienza indimenticabile.",
-    ctaTesto:    "Prenota il tuo tavolo",
   },
 
   /* ─── 4. CONTATTI / FOOTER ──────────────────────────────────────────── */
@@ -220,25 +219,6 @@ h1 em{font-style:italic;color:var(--gold)}
 }
 
 /* ── CTA hero ── */
-.card-cta-wrap{
-  display:flex;justify-content:center;
-  padding:0 16px 16px;
-  background:var(--gray-100);   /* stesso beige della zona form, non bianco */
-}
-.hero-cta{
-  display:inline-flex;align-items:center;gap:10px;
-  padding:16px 30px;border:none;border-radius:100px;
-  background:var(--cta-bg);color:var(--cta-text);
-  font-family:var(--font-body);font-size:15px;font-weight:700;
-  letter-spacing:.5px;text-transform:uppercase;cursor:pointer;
-  box-shadow:var(--shadow-md);
-  transition:transform .12s, box-shadow .2s, filter .2s;
-}
-.hero-cta:hover{transform:translateY(-2px);box-shadow:var(--shadow-lg);filter:brightness(1.03)}
-.hero-cta:active{transform:translateY(0)}
-.hero-cta:focus-visible{outline:3px solid var(--gold-light);outline-offset:3px}
-.hero-cta svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
-
 /* ── Booking widget ── */
 .booking-card{
   width:100%;background:var(--warm-white);border-radius:var(--radius-lg);
@@ -613,14 +593,6 @@ h1 em{font-style:italic;color:var(--gold)}
         </div><!-- wizard-frame -->
       </div><!-- booking-body -->
     </div><!-- booking-wizard -->
-
-    <!-- CTA dentro la card del form -->
-    <div class="card-cta-wrap">
-      <button type="button" class="hero-cta" id="heroCta">
-        <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-        <span id="heroCtaText"></span>
-      </button>
-    </div>
   </div><!-- booking-card -->
 
   <!-- Trust -->
@@ -864,7 +836,6 @@ h1 em{font-style:italic;color:var(--gold)}
     document.getElementById('brandEyebrow').textContent = C.brand.tagline;
     document.getElementById('heroHeadline').innerHTML = C.hero.headline;      // <em> ammesso
     document.getElementById('heroSubtitle').textContent = C.hero.sottotitolo;
-    document.getElementById('heroCtaText').textContent = C.hero.ctaTesto;
     document.getElementById('wizardBrand').textContent = C.brand.nome;
     document.getElementById('bookingTitle').textContent = C.testi.formTitolo;
     document.title = C.testi.formTitolo + ' · ' + C.brand.nome;
@@ -1159,9 +1130,6 @@ h1 em{font-style:italic;color:var(--gold)}
   /* ═══════════════════════════════════════════════════════════════════════
      EVENT LISTENERS
      ═══════════════════════════════════════════════════════════════════════ */
-  document.getElementById('heroCta').addEventListener('click', function(){
-    document.getElementById('prenota').scrollIntoView({behavior:'smooth', block:'start'});
-  });
   els.calPrev.addEventListener('click', function(){
     if(els.calPrev.disabled) return;
     state.calMonth--; if(state.calMonth<0){state.calMonth=11;state.calYear--;}
