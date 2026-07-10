@@ -19,6 +19,26 @@ mappa, social).
 
 ---
 
+## ✅ Checklist rapida per ogni nuovo cliente
+
+1. **Crea il repo** dal template ("Use this template").
+2. **Attiva GitHub Pages** (passaggio manuale, una volta): repo → **Settings → Pages →
+   Build and deployment → Source: "GitHub Actions"**. Senza questo la pubblicazione fallisce
+   con *"Create Pages site failed"*.
+3. **Personalizza il `CONFIG`** in `index.html` con i dati del cliente (e il blocco `DATI`
+   in `privacy.html`). A ogni salvataggio su `main` il sito si ripubblica da solo.
+4. **Google Sheet**: crea il foglio + la Web App (vedi §3) e incolla l'URL in
+   `googleSheetsWebAppUrl`. ⚠️ Accesso Web App = **"Chiunque"**, e **dopo ogni modifica dello
+   script ripubblica con "Nuova versione"**.
+5. **Svuota i dati demo**: `occupatiDemo: {}` e `ancoraDemo: false`.
+6. **Prova**: fai una prenotazione di test e verifica che arrivi nel foglio, poi cancella la
+   riga di test.
+
+> I due passaggi che si dimenticano più spesso: **(2)** attivare Pages come "GitHub Actions"
+> e **(4)** ripubblicare lo script con "Nuova versione" dopo ogni modifica.
+
+---
+
 ## 1. Creare una landing per un nuovo cliente
 
 Apri `index.html`, trova il blocco `const CONFIG = { … }` (è tutto commentato in
@@ -80,21 +100,24 @@ Google Apps Script**. Serve solo incollare un URL in `CONFIG.integrazione.google
 ### Passi (una volta per cliente)
 1. Crea un nuovo Google Sheet per il ristorante. Prima riga (intestazioni):
    `Data | Ora | Persone | Nome | Telefono | Email | Richieste | Privacy | Creata`
-2. Menu **Estensioni → Apps Script** e incolla:
+2. Prendi l'**ID del foglio** dall'URL: è la parte lunga **tra `/d/` e `/edit`**.
+3. Menu **Estensioni → Apps Script**, cancella tutto e incolla (inserendo il tuo ID):
 
    ```js
+   const SHEET_ID = "INCOLLA_QUI_L_ID_DEL_FOGLIO";   // ⚠️ SOLO l'ID, senza /d/ e senza /edit
+
    function doPost(e) {
-     const sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+     const sh = SpreadsheetApp.openById(SHEET_ID).getSheets()[0];
      const d = JSON.parse(e.postData.contents);
-     sheet.appendRow([d.data, d.ora, d.persone, d.nome, d.telefono, d.email, d.richieste, d.privacy, d.creata]);
-     return ContentService.createTextOutput(JSON.stringify({ok:true}))
+     sh.appendRow([d.data, d.ora, d.persone, d.nome, d.telefono, d.email, d.richieste, d.privacy, d.creata]);
+     return ContentService.createTextOutput(JSON.stringify({ ok: true }))
                           .setMimeType(ContentService.MimeType.JSON);
    }
 
    // (Opzionale) legge i coperti occupati per far funzionare il grigetto "dal vivo".
    // Attiva anche CONFIG.integrazione.leggiOccupatiDaSheets = true.
    function doGet(e) {
-     const rows = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet().getDataRange().getValues();
+     const rows = SpreadsheetApp.openById(SHEET_ID).getSheets()[0].getDataRange().getValues();
      const out = {};
      for (let i = 1; i < rows.length; i++) {
        const [data, ora, persone] = rows[i];
@@ -107,13 +130,26 @@ Google Apps Script**. Serve solo incollare un URL in `CONFIG.integrazione.google
                           .setMimeType(ContentService.MimeType.JSON);
    }
    ```
-3. **Distribuisci → Nuova distribuzione → Tipo: App web**, accesso *"Chiunque"*.
-   Copia l'URL `…/exec` e incollalo in:
+   > ℹ️ Si usa **`openById(SHEET_ID)`** e **non** `getActiveSpreadsheet()`: così funziona anche
+   > quando lo script è un "progetto separato" e non un progetto legato al foglio (caso comune).
+4. **Distribuisci → Nuova distribuzione → Tipo: App web**. Alla voce **"Chi ha accesso"**
+   scegli **"Chiunque"** — ⚠️ *non* "Chiunque con un account Google", è la causa n°1 dei dati
+   che non arrivano. Autorizza fino a **"Consenti"**. Copia l'URL `…/exec` e incollalo in:
    ```js
    integrazione: { googleSheetsWebAppUrl: "https://script.google.com/macros/s/XXXX/exec" }
    ```
-4. (Opzionale) per leggere le disponibilità reali dallo Sheet all'avvio:
+5. **⚠️ IMPORTANTE — dopo OGNI modifica al codice dello script**, ripubblica, altrimenti l'URL
+   continua a usare la versione vecchia (i dati non si aggiornano):
+   **Distribuisci → Gestisci distribuzioni → ✏️ (matita) → Versione: "Nuova versione" → Distribuisci**.
+   L'URL **resta identico**, non serve ritoccare la landing.
+6. (Opzionale) per leggere le disponibilità reali dallo Sheet all'avvio:
    `integrazione.leggiOccupatiDaSheets: true`.
+
+> 🧪 **Test rapido se i dati non arrivano:** nell'editor Apps Script aggiungi
+> `function test(){ SpreadsheetApp.openById(SHEET_ID).getSheets()[0].appendRow(["TEST", new Date()]); }`,
+> selezionala dal menu a tendina in alto e premi **▶ Esegui**. Se la riga compare, lo script
+> scrive bene → controlla accesso "Chiunque" e ripubblica con "Nuova versione". Se non compare,
+> è l'ID del foglio o l'autorizzazione.
 
 Se lasci `googleSheetsWebAppUrl: ""`, la landing funziona in **solo-locale** (demo): salva
 in localStorage e mostra la conferma, senza invii esterni.
