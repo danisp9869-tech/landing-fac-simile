@@ -1,5 +1,13 @@
 # 🍽️ Template Landing Prenotazioni — Food Media Lab
 
+> ## 👉 Come usare questo template
+> Questo repository è un **modello riutilizzabile**. Per creare la landing di un
+> nuovo cliente **non modificare questo repo**: usa il pulsante verde
+> **"Use this template" → "Create a new repository"** in alto.
+> Otterrai una copia indipendente; lì apri `index.html`, modifica solo il blocco
+> **`CONFIG`** con i dati del cliente e il sito si pubblica da solo su GitHub Pages.
+> Dettagli nella sezione **§1** qui sotto.
+
 Template **single-file** (`index.html`) di landing page per ristoranti, il cui unico
 scopo è **far prenotare un tavolo**. Nessuna dipendenza, nessun build: si apre con un
 doppio click. Per ogni nuovo cliente si modifica **solo l'oggetto `CONFIG`** in cima al
