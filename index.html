@@ -118,10 +118,20 @@ const CONFIG = {
     stepOrario:     "Orario",
     labelNome:      "Nome e cognome",
     labelTelefono:  "Numero di telefono",
+    labelEmail:     "Email",
     labelRichieste: "Richieste speciali",
     btnConferma:    "Conferma prenotazione",
     successTitolo:  "Prenotazione confermata!",
     successMsg:     "Grazie per aver scelto di cenare con noi. Ti aspettiamo!",
+  },
+
+  /* ─── 8. CONSENSO PRIVACY (checkbox obbligatoria prima di confermare) ─── */
+  privacy: {
+    // Testo mostrato accanto alla checkbox. La parola indicata in "linkTesto"
+    // diventa un link cliccabile verso "linkUrl" (se compilato).
+    testo:     "Ho letto e accetto l'informativa sulla privacy e acconsento al trattamento dei miei dati personali per la gestione della prenotazione.",
+    linkTesto: "informativa sulla privacy",   // parola da trasformare in link ("" per nessun link)
+    linkUrl:   "",                             // URL dell'informativa completa (es. "privacy.html")
   },
 };
 </script>
@@ -376,6 +386,23 @@ h1 em{font-style:italic;color:var(--gold)}
 .form-field input:focus,.form-field textarea:focus{border-bottom-color:var(--gold)}
 .form-field textarea{resize:none;min-height:56px}
 .field-error{display:block;font-size:11px;color:var(--rust,#c0392b);margin-top:6px;font-weight:500;min-height:0}
+
+/* ── Consenso privacy ── */
+.privacy-field{margin:4px 0 8px}
+.privacy-check{display:flex;align-items:flex-start;gap:10px;cursor:pointer;font-size:12.5px;line-height:1.5;color:var(--ink-light)}
+.privacy-check input[type="checkbox"]{
+  flex-shrink:0;appearance:none;-webkit-appearance:none;
+  width:20px;height:20px;margin-top:1px;border:1.5px solid var(--gray-300);border-radius:6px;
+  background:var(--warm-white);cursor:pointer;position:relative;transition:background .15s,border-color .15s;
+}
+.privacy-check input[type="checkbox"]:hover{border-color:var(--gold)}
+.privacy-check input[type="checkbox"]:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.privacy-check input[type="checkbox"]:checked{background:var(--gold);border-color:var(--gold)}
+.privacy-check input[type="checkbox"]:checked::after{
+  content:'';position:absolute;left:6px;top:2px;width:5px;height:10px;
+  border:solid var(--warm-white);border-width:0 2px 2px 0;transform:rotate(45deg);
+}
+.privacy-text a{color:var(--gold);text-decoration:underline}
 .btn-conferma{
   width:100%;padding:16px;border:none;border-radius:var(--radius-sm);
   background:var(--gray-200);color:var(--gray-400);font-size:15px;font-weight:700;cursor:not-allowed;
@@ -612,9 +639,23 @@ h1 em{font-style:italic;color:var(--gold)}
                   <span class="field-error" id="errTelefono"></span>
                 </div>
                 <div class="form-field">
+                  <label for="inputEmail" id="labelEmail"></label>
+                  <input type="email" id="inputEmail" autocomplete="email" placeholder="mario.rossi@email.it" required>
+                  <span class="field-error" id="errEmail"></span>
+                </div>
+                <div class="form-field">
                   <label for="inputRichieste" id="labelRichieste"></label>
                   <textarea id="inputRichieste" rows="2" placeholder="Allergie, seggiolone, tavolo esterno…"></textarea>
                 </div>
+
+                <!-- Consenso privacy obbligatorio: sblocca il bottone quando spuntato -->
+                <div class="privacy-field">
+                  <label class="privacy-check">
+                    <input type="checkbox" id="inputPrivacy" aria-required="true">
+                    <span class="privacy-text" id="privacyText"></span>
+                  </label>
+                </div>
+
                 <button type="button" class="btn-conferma" id="btnConferma" disabled></button>
               </div>
             </div>
@@ -846,8 +887,8 @@ h1 em{font-style:italic;color:var(--gold)}
   ['btnBack','stepTabs','summaryBar','summaryDate','summaryPeople','summaryTime','summaryTimeItem',
    'tabDate','tabPeople','tabTime','tabDateLabel','tabDateValue','tabPeopleLabel','tabPeopleValue',
    'tabTimeLabel','tabTimeValue','calMonthLabel','calGrid','calPrev','calNext','peopleGrid',
-   'peopleCustom','peopleSubmit','timeGrid','inputNome','inputTelefono','inputRichieste',
-   'btnConferma','btnNewBooking','successDetails','bookingProgressFill','errTelefono']
+   'peopleCustom','peopleSubmit','timeGrid','inputNome','inputTelefono','inputEmail','inputRichieste',
+   'inputPrivacy','btnConferma','btnNewBooking','successDetails','bookingProgressFill','errTelefono','errEmail']
     .forEach(function(id){ els[id] = document.getElementById(id); });
 
   // Applica CONFIG.colori alle variabili CSS
@@ -887,8 +928,10 @@ h1 em{font-style:italic;color:var(--gold)}
     els.tabTimeLabel.textContent = C.testi.stepOrario;
     document.getElementById('labelNome').textContent = C.testi.labelNome;
     document.getElementById('labelTelefono').textContent = C.testi.labelTelefono;
+    document.getElementById('labelEmail').textContent = C.testi.labelEmail;
     document.getElementById('labelRichieste').innerHTML = C.testi.labelRichieste +
       ' <span style="font-weight:400;color:var(--gray-400);font-style:italic">(facoltativo)</span>';
+    document.getElementById('privacyText').innerHTML = buildPrivacyText();
     els.btnConferma.textContent = C.testi.btnConferma;
     document.getElementById('successTitolo').textContent = C.testi.successTitolo;
     document.getElementById('successMsg').textContent = C.testi.successMsg;
@@ -912,6 +955,18 @@ h1 em{font-style:italic;color:var(--gold)}
   }
 
   function esc(s){ return String(s).replace(/[&<>"]/g, function(m){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]; }); }
+
+  // Costruisce il testo del consenso privacy, rendendo "linkTesto" un link se c'è "linkUrl".
+  function buildPrivacyText(){
+    const pv = C.privacy || {};
+    let txt = esc(pv.testo || '');
+    if(pv.linkTesto && pv.linkUrl){
+      const parola = esc(pv.linkTesto);
+      const link = '<a href="'+esc(pv.linkUrl)+'" target="_blank" rel="noopener">'+parola+'</a>';
+      txt = txt.replace(parola, link);
+    }
+    return txt;
+  }
 
   /* ── Calendario ── */
   function renderCalendar(){
@@ -1099,15 +1154,24 @@ h1 em{font-style:italic;color:var(--gold)}
     const cifre = tel.replace(/[^\d]/g,'');
     return cifre.length >= 7;
   }
+  function validaEmail(email){
+    // Formato base valido: qualcosa@qualcosa.dominio
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  }
   function validateForm(){
     const nome = els.inputNome.value.trim();
     const tel = els.inputTelefono.value.trim();
+    const email = els.inputEmail.value.trim();
+    const privacyOk = els.inputPrivacy.checked;          // ← consenso obbligatorio
     const bookingComplete = !!(state.date && state.people && state.time);
     const telOk = validaTelefono(tel);
-    const formComplete = !!(nome && tel && telOk);
-    // messaggio errore telefono (solo se ha iniziato a scrivere)
+    const emailOk = validaEmail(email);
+    const formComplete = !!(nome && telOk && emailOk);
+    // messaggi d'errore (solo se l'utente ha già scritto qualcosa)
     els.errTelefono.textContent = (tel && !telOk) ? 'Inserisci un numero di telefono valido' : '';
-    const isReady = state.step === 4 && bookingComplete && formComplete && !state.sending;
+    els.errEmail.textContent = (email && !emailOk) ? 'Inserisci un indirizzo email valido' : '';
+    // Il bottone si accende solo con prenotazione completa, contatti validi E privacy spuntata
+    const isReady = state.step === 4 && bookingComplete && formComplete && privacyOk && !state.sending;
     els.btnConferma.classList.toggle('ready', isReady);
     els.btnConferma.disabled = !isReady;
   }
@@ -1131,7 +1195,9 @@ h1 em{font-style:italic;color:var(--gold)}
       persone:    state.people,
       nome:       els.inputNome.value.trim(),
       telefono:   els.inputTelefono.value.trim(),
+      email:      els.inputEmail.value.trim(),
       richieste:  els.inputRichieste.value.trim(),
+      privacy:    els.inputPrivacy.checked ? 'Sì' : 'No',   // consenso registrato
       creata:     new Date().toISOString(),
     };
 
@@ -1151,6 +1217,7 @@ h1 em{font-style:italic;color:var(--gold)}
       '<p><strong>🕐 Orario:</strong> ' + esc(b.ora) + '</p>' +
       '<p><strong>👤 Nome:</strong> ' + esc(b.nome) + '</p>' +
       '<p><strong>📞 Telefono:</strong> ' + esc(b.telefono) + '</p>' +
+      '<p><strong>✉️ Email:</strong> ' + esc(b.email) + '</p>' +
       (b.richieste ? '<p><strong>📝 Richieste:</strong> ' + esc(b.richieste) + '</p>' : '');
     goToStep(5);
   }
@@ -1159,8 +1226,10 @@ h1 em{font-style:italic;color:var(--gold)}
   function resetBooking(){
     state.step=1; state.date=null; state.people=null; state.time=null; state.sending=false;
     state.calYear=new Date().getFullYear(); state.calMonth=new Date().getMonth();
-    els.inputNome.value=''; els.inputTelefono.value='';
+    els.inputNome.value=''; els.inputTelefono.value=''; els.inputEmail.value='';
     els.inputRichieste.value=''; els.peopleCustom.value='';
+    els.inputPrivacy.checked=false;
+    els.errEmail.textContent=''; els.errTelefono.textContent='';
     els.btnConferma.classList.remove('ready','sending');
     els.btnConferma.textContent = C.testi.btnConferma;
     renderCalendar(); renderPeopleGrid(); renderTimeGrid();
@@ -1202,6 +1271,8 @@ h1 em{font-style:italic;color:var(--gold)}
   });
   els.inputNome.addEventListener('input', validateForm);
   els.inputTelefono.addEventListener('input', validateForm);
+  els.inputEmail.addEventListener('input', validateForm);
+  els.inputPrivacy.addEventListener('change', validateForm);
   els.btnConferma.addEventListener('click', confirmBooking);
   els.btnNewBooking.addEventListener('click', resetBooking);
 

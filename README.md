@@ -79,14 +79,14 @@ Google Apps Script**. Serve solo incollare un URL in `CONFIG.integrazione.google
 
 ### Passi (una volta per cliente)
 1. Crea un nuovo Google Sheet per il ristorante. Prima riga (intestazioni):
-   `Data | Ora | Persone | Nome | Telefono | Richieste | Creata`
+   `Data | Ora | Persone | Nome | Telefono | Email | Richieste | Privacy | Creata`
 2. Menu **Estensioni → Apps Script** e incolla:
 
    ```js
    function doPost(e) {
      const sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
      const d = JSON.parse(e.postData.contents);
-     sheet.appendRow([d.data, d.ora, d.persone, d.nome, d.telefono, d.richieste, d.creata]);
+     sheet.appendRow([d.data, d.ora, d.persone, d.nome, d.telefono, d.email, d.richieste, d.privacy, d.creata]);
      return ContentService.createTextOutput(JSON.stringify({ok:true}))
                           .setMimeType(ContentService.MimeType.JSON);
    }
